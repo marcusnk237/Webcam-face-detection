@@ -5,16 +5,17 @@ import datetime as dt
 from time import sleep
 
 # Chargement du classifieur
-face_path = "haarcascade_frontalface_default.xml"
-face_class = cv2.CascadeClassifier(face_path)
-eye_path= "haarcascade_eye.xml"
-eye_class= cv2.CascadeClassifier(eye_path) 
+face_class = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+eye_class= cv2.CascadeClassifier("haarcascade_eye.xml") 
+smile_class = cv2.CascadeClassifier('haarcascade_smile.xml') 
+
 log.basicConfig(filename='face_detection.log',level=log.INFO)
 
 # Lancement de la webcam
 video_capture = cv2.VideoCapture(0)
 # Initialisation du nombre de visage détectés
 n_faces = 0
+n_smile=0
 
 while True:
     if not video_capture.isOpened():
@@ -31,28 +32,28 @@ while True:
         gray,
         scaleFactor=1.1,
         minNeighbors=5,
-        minSize=(25, 25)
+        minSize=(30,30)
     )
 
     # Dessin de rectangles autour des visages détectées
     for (fx, fy, fw, fh) in faces:
-        # To draw a rectangle in a face  
         cv2.rectangle(frame,(fx,fy),(fx+fw,fy+fh),(255,255,0),2)  
         roi_gray = gray[fy:fy+fh, fx:fx+fw] 
         roi_color = frame[fy:fy+fh, fx:fx+fw] 
   
-        # Detects eyes of different sizes in the input image 
+        # Detection des yeux
         eyes = eye_class.detectMultiScale(roi_gray)  
-  
-        #To draw a rectangle in eyes 
         for (ex,ey,ew,eh) in eyes: 
-            cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,127,255),2) 
+            cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,0,255),2) 
+        # Detection du sourire
+        smiles = smile_class.detectMultiScale(roi_gray, 1.8, 20)  
+        for (sx,sy,sw,sh) in smiles: 
+            cv2.rectangle(roi_color,(sx,sy),(sx+sw,sy+sh),(0,255,0),2) 
     
     # Sauvegarde dans le fichier log du nombre de visage détectés
     if n_faces != len(faces):
         n_faces = len(faces)
         log.info("Nombre de visage détecté : "+str(len(faces))+" à "+str(dt.datetime.now()))
-        print (" Nombre de visage détecté : {0}".format(len(faces)))
 
     # Affichage du résultat
     cv2.imshow('Video', frame)
