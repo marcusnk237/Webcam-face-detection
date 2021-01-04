@@ -5,8 +5,10 @@ import datetime as dt
 from time import sleep
 
 # Chargement du classifieur
-path_class = "haarcascade_frontalface_default.xml"
-face_class = cv2.CascadeClassifier(path_class)
+face_path = "haarcascade_frontalface_default.xml"
+face_class = cv2.CascadeClassifier(face_path)
+eye_path= "haarcascade_eye.xml"
+eye_class= cv2.CascadeClassifier(eye_path) 
 log.basicConfig(filename='face_detection.log',level=log.INFO)
 
 # Lancement de la webcam
@@ -33,20 +35,33 @@ while True:
     )
 
     # Dessin de rectangles autour des visages détectées
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 128, 0), 2)
+    for (fx, fy, fw, fh) in faces:
+        # To draw a rectangle in a face  
+        cv2.rectangle(frame,(fx,fy),(fx+fw,fy+fh),(255,255,0),2)  
+        roi_gray = gray[fy:fy+fh, fx:fx+fw] 
+        roi_color = frame[fy:fy+fh, fx:fx+fw] 
+  
+        # Detects eyes of different sizes in the input image 
+        eyes = eye_class.detectMultiScale(roi_gray)  
+  
+        #To draw a rectangle in eyes 
+        for (ex,ey,ew,eh) in eyes: 
+            cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,127,255),2) 
+    
     # Sauvegarde dans le fichier log du nombre de visage détectés
     if n_faces != len(faces):
         n_faces = len(faces)
-        log.info("faces: "+str(len(faces))+" at "+str(dt.datetime.now()))
+        log.info("Nombre de visage détecté : "+str(len(faces))+" à "+str(dt.datetime.now()))
         print (" Nombre de visage détecté : {0}".format(len(faces)))
 
     # Affichage du résultat
     cv2.imshow('Video', frame)
 
-
+    # Arrêt de l'application si une touche spéciale est appuyée
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 video_capture.release()
+
+# Allocation mémoire
 cv2.destroyAllWindows()
