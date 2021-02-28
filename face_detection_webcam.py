@@ -15,13 +15,14 @@ log.basicConfig(filename='face_detection.log',level=log.INFO)
 video_capture = cv2.VideoCapture(0)
 # Initialisation du nombre de visage détectés
 n_faces = 0
-n_smile=0
+n_smiles=0
+n_eyes=0
 
 while True:
     if not video_capture.isOpened():
         print('Impossible d\'ouvrir la webcam. Veuillez réessayer')
         sleep(10)
-        pass
+        cv2.destroyAllWindows()
 
     # Récupération de chaque frame de la vidéo
     ret, frame = video_capture.read()
@@ -45,16 +46,22 @@ while True:
         eyes = eye_class.detectMultiScale(roi_gray)  
         for (ex,ey,ew,eh) in eyes: 
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,0,255),2) 
+        if n_eyes != len(eyes):
+            n_eyes = len(eyes)
+            log.info("Nombre d'oeil(s)' détecté(s) : " +
+                 str(len(eyes))+" à "+str(dt.datetime.now()))
         # Detection du sourire
         smiles = smile_class.detectMultiScale(roi_gray, 1.8, 20)  
         for (sx,sy,sw,sh) in smiles: 
             cv2.rectangle(roi_color,(sx,sy),(sx+sw,sy+sh),(0,255,0),2) 
+        if n_smiles != len(smiles):
+            n_smiles = len(smiles)
+            log.info("Nombre de sourire(s) détecté(s) : "+str(len(smiles))+" à "+str(dt.datetime.now()))        
     
     # Sauvegarde dans le fichier log du nombre de visage détectés
     if n_faces != len(faces):
         n_faces = len(faces)
-        log.info("Nombre de visage détecté : "+str(len(faces))+" à "+str(dt.datetime.now()))
-
+        log.info("Nombre de visage(s) détecté(s) : "+str(len(faces))+" à "+str(dt.datetime.now()))
     # Affichage du résultat
     cv2.imshow('Video', frame)
 
